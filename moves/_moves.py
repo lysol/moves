@@ -63,7 +63,7 @@ class MovesClient(object):
             error = "<%(error)s>: %(error_description)s" % response
             raise MovesAPIError(error)
 
-    def api_http(self, path, method='GET', **kwargs):
+    def api(self, path, method='GET', **kwargs):
 
         params = kwargs['params'] if 'params' in kwargs else {}
         data = kwargs['data'] if 'data' in kwargs else {}
@@ -91,10 +91,10 @@ class MovesClient(object):
         return resp
 
     def get(self, path, **params):
-        return self.parse_response(self.api_http(path, params=params).text)
+        return self.parse_response(self.api(path, params=params).text)
 
     def post(self, path, **params):
-        return self.parse_response(self.api_http(path, data=params).text)
+        return self.parse_response(self.api(path, data=params).text)
 
     def set_first_date(self):
         if not self.first_date:
@@ -110,6 +110,6 @@ class MovesClient(object):
                 name = "%s/%s" % (base_path, '/'.join(args))
             else:
                 name = base_path
-            return self.parse_response(self.api_http(name, 'GET',
+            return self.parse_response(self.api(name, 'GET',
                                        params=kwargs).text)
         return closure
