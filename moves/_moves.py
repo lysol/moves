@@ -71,19 +71,18 @@ class MovesClient(object):
         if not self.access_token and 'access_token' not in params:
             raise MovesAPIError("You must provide a valid access token.")
 
+        url = "%s/%s" % (self.api_url, path)
+
         if 'access_token' in params:
             access_token = params['access_token']
             del(params['access_token'])
         else:
             access_token = self.access_token
 
-        params['client_id'] = self.client_id
-        params['client_secret'] = self.client_secret
-        url = "%s/%s" % (self.api_url, path)
-
         headers = {
             "Authorization": 'Bearer ' + access_token
         }
+
         resp = requests.request(method, url, data=data, params=params,
                                 headers=headers)
         if str(resp.status_code)[0] not in ('2', '3'):
@@ -106,7 +105,11 @@ class MovesClient(object):
         path = name
 
         def closure(*args, **kwargs):
-            name = path.replace('_', '/')
-            return self.parse_response(self.api_http(name, *args,
+            base_path = path.replace('_', '/')
+            if len(args) > 0:
+                name = "%s/%s" % (base_path, '/'.join(args))
+            else:
+                name = base_path
+            return self.parse_response(self.api_http(name, 'GET',
                                        params=kwargs).text)
         return closure
