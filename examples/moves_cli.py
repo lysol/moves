@@ -11,36 +11,32 @@ script.
 
 from cmd import Cmd as _Cmd
 from pprint import pprint as _pprint
-import itertools as _itertools
 import json as _json
 
 try:
     from moves import MovesClient
 except ImportError:
     import sys
-    sys.path.insert(0, '..')
+    from os.path import join, normpath
+    # Try looking in the parent of this script's directory.
+    sys.path.insert(0, normpath(join(sys.path[0], '..')))
     from moves import MovesClient
     
-##    class MovesClient(object):
-##        def __init__(self, **kwds):
-##            self.__dict__.update(kwds)
-
-def _partition(pred, iterable,
-              # Optimized by replacing global lookups with local variables
-              # defined as default values.
-              filter=_itertools.ifilter,
-              filterfalse=_itertools.ifilterfalse,
-              tee=_itertools.tee):
-    'Use a predicate to partition entries into false entries and true entries'
-    # partition(is_odd, range(10)) --> 0 2 4 6 8   and  1 3 5 7 9
-    t1, t2 = tee(iterable)
-    return filterfalse(pred, t1), filter(pred, t2)
 
 def _parse_line(f):
+    import itertools
     from functools import wraps
+    def partition(pred, iterable,
+                  filter=itertools.ifilter,
+                  filterfalse=itertools.ifilterfalse,
+                  tee=itertools.tee):
+        'Use a predicate to partition entries into false entries and true entries'
+        t1, t2 = tee(iterable)
+        return filterfalse(pred, t1), filter(pred, t2)
+
     @wraps(f)
     def wrapper(self, line):
-        args, kwds = _partition(
+        args, kwds = partition(
             lambda s: '=' in s,
             line.split())
         kwds = dict(item.split('=') for item in kwds)
@@ -55,7 +51,7 @@ class MovesCmd(_Cmd):
         '''Echos the arguments and exits the interpreter.'''
         print `argv`
 
-    def do_exit(self, line):
+    def do_quit(self, line):
         '''Exits the interpreter.'''
         return True
 
@@ -111,23 +107,34 @@ class MovesCmd(_Cmd):
 
     @_parse_line
     def do_get(self, *path, **params):
-        '''get path [key=value]...'''
+        '''Issues an HTTP GET request
+Syntax:
+\tget path... [key=value]...
+'''
         _pprint(self.mc.get('/'.join(path), **params))
 
     @_parse_line
     def do_post(self, *path, **params):
-        '''post path [key=value]...'''
+        '''Issues an HTTP POST request
+Syntax:
+\tpost path... [key=value]...
+'''
         _pprint(self.mc.post('/'.join(path), **params))
 
     def do_tokeninfo(self, line):
         '''Displays information about the access token.'''
         _pprint(self.mc.tokeninfo())
 
-##_pprint(mc.user_profile())
-##_pprint(mc.user_summary_daily(pastDays=7))
-##_pprint(mc.user_activities_daily(pastDays=7))
-##_pprint(mc.user_places_daily(pastDays=7))
-##_pprint(mc.user_storyline_daily(pastDays=7))
+    def do_examples(self, line):
+        '''Displays example commands.'''
+        print '''\
+These are some commands to try.
+ get user profile
+ get user summary daily pastDays=7
+ get user activities daily pastDays=5
+ get user places daily pastDays=3
+ get user storyline daily pastDays=2
+'''
 
     def onecmd(self, line):
         try:
