@@ -9,6 +9,14 @@ into a web browser, then copy the URL of the resulting page back to this
 script.
 """
 
+copyright = """
+Copyright (c) 2013 Sam Denton <samwyse@gmail.com>
+All Rights Reserved.
+
+Licensed under the Academic Free License (AFL 3.0)
+http://opensource.org/licenses/afl-3.0
+"""
+
 from cmd import Cmd as _Cmd
 from pprint import pprint as _pprint
 import json as _json
@@ -54,6 +62,10 @@ class MovesCmd(_Cmd):
     def do_quit(self, line):
         '''Exits the interpreter.'''
         return True
+
+    def do_copyright(self, line):
+        '''Displays copyright and licensing information.'''
+        print copyright
 
     def do_client_id(self, line):
         '''Displays or sets the value.'''
