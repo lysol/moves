@@ -8,6 +8,9 @@ class MovesAPIError(Exception):
     """Raised if the Moves API returns an error."""
     pass
 
+class MovesAPINotModifed(Exception):
+    """Raised if the document requested is unmodified. Need the use of etag header"""
+    pass
 
 class MovesClient(object):
     """OAuth client for the Moves API"""
@@ -17,6 +20,8 @@ class MovesClient(object):
     token_url = "https://api.moves-app.com/oauth/v1/access_token"
     tokeninfo_url = "https://api.moves-app.com/oauth/v1/tokeninfo"
 
+    last_ETag = None
+    
     def __init__(self, client_id=None, client_secret=None,
                  access_token=None, use_app=False):
 
@@ -101,6 +106,10 @@ class MovesClient(object):
             "Authorization": 'Bearer ' + access_token
         }
 
+        if 'etag' in params:
+            headers['If-None-Match'] = params['etag']
+            del(params['etag'])
+        
         resp = requests.request(method, url,
                                 data=data,
                                 params=params,
@@ -108,6 +117,10 @@ class MovesClient(object):
         if str(resp.status_code)[0] not in ('2', '3'):
             raise MovesAPIError("Error returned via the API with status code (%s):" %
                                 resp.status_code, resp.text)
+        if resp.status_code == 304:
+            raise MovesAPINotModifed("Unmodified")
+        
+        self.last_ETag = resp.headers['etag'] if 'etag' in resp.headers else None
         return resp
 
     def get(self, path, **params):
