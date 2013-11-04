@@ -19,8 +19,8 @@ class MovesClient(object):
     web_auth_uri = "https://api.moves-app.com/oauth/v1/authorize"
     token_url = "https://api.moves-app.com/oauth/v1/access_token"
     tokeninfo_url = "https://api.moves-app.com/oauth/v1/tokeninfo"
-
-    last_ETag = None
+    
+    
     
     def __init__(self, client_id=None, client_secret=None,
                  access_token=None, use_app=False):
@@ -30,6 +30,7 @@ class MovesClient(object):
         self.access_token = access_token
         self.auth_url = self.app_auth_url if use_app else self.web_auth_uri
         self.use_app = use_app
+        self._last_headers = None
 
     def parse_response(self, response):
         """Parse JSON API responses."""
@@ -95,7 +96,6 @@ class MovesClient(object):
             raise MovesAPIError("You must provide a valid access token.")
 
         url = "%s/%s" % (self.api_url, path)
-
         if 'access_token' in params:
             access_token = params['access_token']
             del(params['access_token'])
@@ -120,7 +120,7 @@ class MovesClient(object):
         if resp.status_code == 304:
             raise MovesAPINotModifed("Unmodified")
         
-        self.last_ETag = resp.headers['etag'] if 'etag' in resp.headers else None
+        self._last_headers = resp.headers
         return resp
 
     def get(self, path, **params):
@@ -165,3 +165,12 @@ and then parses the response.
         # Cache it to avoid additional calls to __getattr__.
         setattr(self, name, retval)
         return retval
+
+# Give Access to last attribute
+_move_client_status = ['etag', 'x-ratelimit-hourlimit', 'x-ratelimit-hourremaining',
+                       'x-ratelimit-minutelimit', 'x-ratelimit-minuteremaining']
+for att in _move_client_status:
+    att = att.replace('-', '_')
+    setattr(MovesClient, att, property(lambda self,att=att: self._last_headers.get(att, None)
+                                       if self._last_headers else att))
+    
