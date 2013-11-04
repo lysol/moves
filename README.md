@@ -39,6 +39,7 @@ For endpoints that require RESTful parameters in the URL, such as `/user/summary
 All responses are decoded JSON objects.
 
 You can retrieve the status (in header response) of the last request
+
 	moves.etags
 	moves.x_ratelimit_hourlimit
 
