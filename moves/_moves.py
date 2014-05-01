@@ -14,7 +14,7 @@ class MovesAPINotModifed(Exception):
 
 class MovesClient(object):
     """OAuth client for the Moves API"""
-    api_url = "https://api.moves-app.com/api/v1"
+    api_url = "https://api.moves-app.com/api/1.1"
     app_auth_url = "moves://app/authorize"
     web_auth_uri = "https://api.moves-app.com/oauth/v1/authorize"
     token_url = "https://api.moves-app.com/oauth/v1/access_token"
