@@ -8,9 +8,11 @@ class MovesAPIError(Exception):
     """Raised if the Moves API returns an error."""
     pass
 
+
 class MovesAPINotModifed(Exception):
     """Raised if the document requested is unmodified. Need the use of etag header"""
     pass
+
 
 class MovesClient(object):
     """OAuth client for the Moves API"""
@@ -19,6 +21,7 @@ class MovesClient(object):
     web_auth_uri = "https://api.moves-app.com/oauth/v1/authorize"
     token_url = "https://api.moves-app.com/oauth/v1/access_token"
     tokeninfo_url = "https://api.moves-app.com/oauth/v1/tokeninfo"
+    refresh_url = "https://api.moves-app.com/oauth/v1/access_token"
     
     
     
@@ -67,7 +70,24 @@ class MovesClient(object):
         response = requests.post(self.token_url, params=params)
         response = json.loads(response.content)
         try:
-            return response['access_token']
+            return response['access_token'], response['refresh_token']
+        except:
+            error = "<%(error)s>: %(error_description)s" % response
+            raise MovesAPIError(error)
+
+    def refresh_oauth_token(self, refresh_token, **kwargs):
+
+        params = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'refresh_token': refresh_token,
+            'grant_type': kwargs.get('grant_type', 'refresh_token')
+        }
+
+        response = requests.post(self.refresh_url, params=params)
+        response = json.loads(response.content)
+        try:
+            return response['access_token'], response['refresh_token']
         except:
             error = "<%(error)s>: %(error_description)s" % response
             raise MovesAPIError(error)
